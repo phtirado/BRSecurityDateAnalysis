@@ -1,0 +1,29 @@
+location_id,location_name,region,is_national
+1,Brasil,Nacional,True
+2,Acre,Norte,False
+3,Alagoas,Nordeste,False
+4,Amapá,Norte,False
+5,Amazonas,Norte,False
+6,Bahia,Nordeste,False
+7,Ceará,Nordeste,False
+8,Distrito Federal,Centro-Oeste,False
+9,Espírito Santo,Sudeste,False
+10,Goiás,Centro-Oeste,False
+11,Maranhão,Nordeste,False
+12,Mato Grosso,Centro-Oeste,False
+13,Mato Grosso do Sul,Centro-Oeste,False
+14,Minas Gerais,Sudeste,False
+15,Pará,Norte,False
+16,Paraíba,Nordeste,False
+17,Paraná,Sul,False
+18,Pernambuco,Nordeste,False
+19,Piauí,Nordeste,False
+20,Rio de Janeiro,Sudeste,False
+21,Rio Grande do Norte,Nordeste,False
+22,Rio Grande do Sul,Sul,False
+23,Rondônia,Norte,False
+24,Roraima,Norte,False
+25,Santa Catarina,Sul,False
+26,São Paulo,Sudeste,False
+27,Sergipe,Nordeste,False
+28,Tocantins,Norte,False

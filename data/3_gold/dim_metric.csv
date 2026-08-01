@@ -1,0 +1,8 @@
+metric_id,metric_code,metric_name,unit
+1,homicidio_doloso,Homicídio Doloso,Absoluto
+2,latrocinio,Latrocínio,Absoluto
+3,lesao_corporal_morte,Lesão Corporal Seguida de Morte,Absoluto
+4,policiais_vitimas,Policiais Vítimas de CVLI,Absoluto
+5,intervencao_policial,Morte por Intervenção Policial,Absoluto
+6,mvi_absoluto,Total MVI,Absoluto
+7,mvi_taxa,Taxa MVI por 100k hab.,Taxa per 100k
