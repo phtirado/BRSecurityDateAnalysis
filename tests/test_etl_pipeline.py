@@ -1,5 +1,5 @@
 import pandas as pd
-import etl_pipeline as etl
+import etl_pipeline2 as etl
 
 
 def test_silver_to_gold_reads_parquet_input(tmp_path, monkeypatch):
