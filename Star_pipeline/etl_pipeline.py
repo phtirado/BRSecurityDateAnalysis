@@ -22,7 +22,7 @@ import re
 import pandas as pd
 import numpy as np
 import pyarrow as pa
-from Entities import MVI as mvi
+from Entities import MetricEntity as entity
 
 
 class ETLPipeline:
@@ -55,18 +55,18 @@ class ETLPipeline:
     BRONZE_DIR = os.path.join(BASE_DIR, "data", "1_bronze")
     SILVER_DIR = os.path.join(BASE_DIR, "data", "2_silver")
     GOLD_DIR = os.path.join(BASE_DIR, "data", "3_gold")
-    MVI = mvi()  # Instantiate MVI class to access its attributes and methods
+    MetricEntity = entity.MetricEntity()  # Instantiate MVI class to access its attributes and methods
 
-    def __init__(self):
+    def __init__(self, metric_entity: entity.MetricEntity = None):
         """
-        Initialize the ETL pipeline and prepare directory structure.
+        Initialize the ETL pipeliine and prepare directory structure.
         
         Creates the medallion architecture directory structure (Bronze, Silver, Gold)
         if they don't exist. Also handles pyarrow/pandas compatibility issues
         that can occur during repeated notebook executions.
         """
-        for folder in [self.BRONZE_DIR, self.SILVER_DIR, self.GOLD_DIR]:
-            os.makedirs(folder, exist_ok=True)
+        if metric_entity is not None:
+            self.MetricEntity = metric_entity
 
         # Work around repeated notebook execution collisions in pyarrow/pandas
         for ext_name in ["pandas.period", "pandas.interval"]:
@@ -117,10 +117,11 @@ class ETLPipeline:
 
         # Extract data block using MVI-specific parsing (handles raw file structure)
         # MVI.get_data_block() skips headers, extracts rows 10-38, handles semicolon delimiters
-        data_rows = self.MVI.get_data_block(lines)
+        # data_rows = self.MVI.get_data_block(lines)
+        data_rows = self.MetricEntity.get_data_block(lines)
 
         # Standardized Column Headers from MVI configuration (16 columns wide format)
-        cols = self.MVI.columns_header   
+        cols = self.MetricEntity.columns_header   
 
         df_raw = pd.DataFrame(data_rows, columns=cols)
 
@@ -183,8 +184,8 @@ class ETLPipeline:
             df_silver[col] = df_silver[col].apply(clean_num)
 
         # Export to Silver Layer as Parquet with CSV fallback
-        silver_parquet_output = os.path.join(self.SILVER_DIR, self.MVI.silver_parquet_output)
-        silver_csv_output = os.path.join(self.SILVER_DIR, self.MVI.silver_csv_output)
+        silver_parquet_output = os.path.join(self.SILVER_DIR, self.MetricEntity.silver_parquet_output)
+        silver_csv_output = os.path.join(self.SILVER_DIR, self.MetricEntity.silver_csv_output)
         df_silver.to_parquet(silver_parquet_output, engine='fastparquet', index=False)
         df_silver.to_csv(silver_csv_output, index=False, encoding='utf-8')
         print(f"Silver table saved to: {silver_parquet_output} ({len(df_silver)} rows)")
@@ -246,7 +247,7 @@ class ETLPipeline:
         # ===== DIMENSION 1: Location Dimension =====
         # Maps each state/region to a unique location_id for the star schema
         # Includes region classification for geographic aggregation queries
-        region_map = self.MVI.region_map  # Load from MVI configuration
+        region_map = self.MetricEntity.region_map  # Load from MetricEntity configuration
 
         # Extract unique locations and assign sequential IDs
         df_loc = df_silver[['location']].drop_duplicates().reset_index(drop=True)
@@ -261,7 +262,7 @@ class ETLPipeline:
         # ===== DIMENSION 2: Metric Dimension =====
         # Defines the 7 violence indicators tracked by MVI
         # Used by fact table to identify which metric each observation represents
-        dim_metric = pd.DataFrame(self.MVI.metrics_metadata)
+        dim_metric = pd.DataFrame(self.MetricEntity.metrics_metadata)
         # Keep only essential columns: metric_id, metric_code, metric_name, unit
         dim_metric = dim_metric[['metric_id', 'metric_code', 'metric_name', 'unit']]
 
@@ -294,9 +295,9 @@ class ETLPipeline:
 
         # ===== Export Gold Star Schema to Parquet =====
         # All tables use Parquet format for efficient columnar storage and analysis
-        dim_location.to_parquet(os.path.join(self.GOLD_DIR, "dim_location.parquet"), index=False)
-        dim_metric.to_parquet(os.path.join(self.GOLD_DIR, "dim_metric.parquet"), index=False)
-        fct_mvi.to_parquet(os.path.join(self.GOLD_DIR, "fct_mvi.parquet"), index=False)
+        dim_location.to_parquet(os.path.join(self.GOLD_DIR, self.MetricEntity.dim_location_parquet), index=False)
+        dim_metric.to_parquet(os.path.join(self.GOLD_DIR, self.MetricEntity.dim_metric_parquet), index=False)
+        fct_mvi.to_parquet(os.path.join(self.GOLD_DIR, self.MetricEntity.fct_to_parquet), index=False)
 
         print("Gold Star Schema created successfully:")
         print(f"  - dim_location.parquet ({len(dim_location)} rows)")

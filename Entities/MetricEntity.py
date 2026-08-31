@@ -12,12 +12,10 @@ The interface ensures consistent data handling across different metrics by enfor
 - Data extraction logic for raw input processing
 """
 
-from abc import ABC, abstractmethod
-import os
 from typing import Dict, List
 
 
-class IMetricEntity(ABC):
+class MetricEntity():
     """
     Abstract base class defining the interface for metric entities.
     
@@ -31,7 +29,6 @@ class IMetricEntity(ABC):
         All attributes are defined as abstract properties that subclasses must implement.
     """
     @property
-    @abstractmethod
     def silver_parquet_output(self) -> str:
         """
         Output filename for the cleaned metric data in Parquet format (Silver layer).
@@ -44,7 +41,6 @@ class IMetricEntity(ABC):
         pass
 
     @property
-    @abstractmethod
     def silver_csv_output(self) -> str:
         """
         Output filename for the cleaned metric data in CSV format (Silver layer).
@@ -57,22 +53,18 @@ class IMetricEntity(ABC):
         pass
 
     @property
-    @abstractmethod
     def dim_location_parquet(self) -> str:
         pass
 
     @property
-    @abstractmethod
     def dim_metric_parquet(self) -> str:
         pass
 
     @property
-    @abstractmethod
     def fct_to_parquet(self) -> str:
         pass
 
     @property
-    @abstractmethod
     def columns_header(self) -> List[str]:
         """
         Standard column headers for wide-format output.
@@ -89,7 +81,6 @@ class IMetricEntity(ABC):
         pass
 
     @property
-    @abstractmethod
     def region_map(self) -> Dict[str, str]:
         """
         Mapping from Brazilian states/locations to macro-regions.
@@ -106,7 +97,6 @@ class IMetricEntity(ABC):
         pass
 
     @property
-    @abstractmethod
     def metrics_metadata(self) -> List[Dict[str, str | int]]:
         """
         Metadata descriptions for all tracked metrics.
@@ -134,7 +124,6 @@ class IMetricEntity(ABC):
         """
         pass
 
-    @abstractmethod
     def get_data_block(self, lignes: List[str]) -> List[str]:
         """
         Extracts the relevant data block from raw input.

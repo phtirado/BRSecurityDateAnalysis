@@ -8,11 +8,11 @@ This module provides a concrete implementation of the IMetricEntity interface,
 specializing in processing and managing MVI data through the ETL pipeline.
 """
 
-from Entities.IMetricEntity import IMetricEntity
+from Entities.MetricEntity import MetricEntity
 from typing import Dict, List
 
 
-class MVI(IMetricEntity):
+class MVI(MetricEntity):
     """
     Concrete implementation of the Mortality, Violence and Injury (MVI) metric.
     
@@ -49,6 +49,9 @@ class MVI(IMetricEntity):
         """
         self._silver_parquet_output = "cleaned_mvi_wide.parquet"
         self._silver_csv_output = "cleaned_mvi_wide.csv"
+        self._dim_location_parquet= "dim_mvi_location.parquet"
+        self._dim_metric_parquet = "dim_mvi_metric.parquet"
+        self._fct_to_parquet = "fct_mvi.parquet"
 
         # Define column structure for wide-format output (Silver layer)
         # Columns include location identifier and metrics for 2024-2025
@@ -158,6 +161,18 @@ class MVI(IMetricEntity):
             str: 'cleaned_mvi_wide.csv'
         """
         return self._silver_csv_output
+
+    @property
+    def dim_location_parquet(self) -> str:
+        return self._dim_location_parquet
+
+    @property
+    def dim_metric_parquet(self) -> str:
+        return self._dim_metric_parquet
+
+    @property
+    def fct_to_parquet(self) -> str:
+        return self._fct_to_parquet
 
     @property
     def columns_header(self) -> List[str]:
