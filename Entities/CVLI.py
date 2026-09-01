@@ -32,9 +32,9 @@ class CVLI(IMetricEntity):
     def __init__(self):
         self._silver_parquet_output = "cleaned_cvli_wide.parquet"
         self._silver_csv_output = "cleaned_cvli_wide.csv"
-        self.dim_location_parquet = "dim_cvli_location.parquet"
-        self.dim_metric_parquet = "dim_cvli_metric.parquet"
-        self.fct_to_parquet = "fct_cvli.parquet"
+        self._dim_location_parquet = "dim_cvli_location.parquet"
+        self._dim_metric_parquet = "dim_cvli_metric.parquet"
+        self._fct_to_parquet = "fct_cvli.parquet"
 
         self._columns_header = [
             'location_raw',
@@ -43,7 +43,7 @@ class CVLI(IMetricEntity):
             'policiais_civis_fora_servico_2024', 'policiais_civis_fora_servico_2025',
             'policiais_militares_fora_servico_2024', 'policiais_militares_fora_servico_2025',
             'total_cvli_2024', 'total_cvli_2025',
-            'taxa_2024', 'taxa_2025',
+            'taxa_cvli_2024', 'taxa_cvli_2025',
             'variacao_pct'
         ]
 
@@ -116,15 +116,15 @@ class CVLI(IMetricEntity):
 
     @property
     def dim_location_parquet(self) -> str:
-        return self.dim_location_parquet
+        return self._dim_location_parquet
 
     @property
     def dim_metric_parquet(self) -> str:
-        return self.dim_metric_parquet
+        return self._dim_metric_parquet
 
     @property
     def fct_to_parquet(self) -> str:
-        return self.fct_to_parquet
+        return self._fct_to_parquet
 
     @property
     def columns_header(self) -> List[str]:

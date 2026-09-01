@@ -1,106 +1,161 @@
 # BR Security Data Analysis
 
-This repository contains a small ETL pipeline and analysis notebooks to process Brazil security statistics (anuario-2026.csv) into a star schema (bronze → silver → gold) and produce visualizations.
+This project builds a medallion ETL pipeline for Brazilian security data, with support for multiple metric families such as MVI and CVLI. It reads raw bronze CSV files, cleans and standardizes them in the silver layer, and creates analytics-ready star schema tables in the gold layer.
 
-**Key Features**
-- ETL extraction and cleaning (bronze → silver) via `CSV_File_Treatment.ipynb` and `etl_pipeline.py`.
-- Normalization into a star schema (gold): `dim_location`, `dim_metric`, `fct_mvi`.
-- Analysis and visualizations using DuckDB, Matplotlib and Seaborn.
+## Overview
 
-**Project Structure**
+The current implementation uses a class-based design:
 
-- `CSV_File_Treatment.ipynb` — Jupyter notebook with ETL steps, queries and plots.
-- `etl_pipeline.py` — Script wrapper for the ETL flow (bronze → silver → gold).
-- `query_analytics.py` — Additional query utilities.
-- `visualize_results.py` — Plotting helpers for the Gold layer outputs.
-- `data/` — Data folders: `1_bronze/`, `2_silver/`, `3_gold/`.
-- `tests/` — Pytest tests for the ETL pipeline.
+- `Star_pipeline/etl_pipeline.py` contains the `ETLPipeline` orchestrator
+- `Entities/` contains the metric definitions and parsing contracts
+- raw input files live in `data/1_bronze/`
+- cleaned silver outputs are written to `data/2_silver/`
+- gold tables are generated in `data/3_gold/`
 
-Data: place the raw CSV at [data/1_bronze/anuario-2026.csv](data/1_bronze/anuario-2026.csv). The pipeline writes cleaned CSV/parquet to `data/2_silver/` and parquet star tables to `data/3_gold/`.
+The active architecture supports:
 
-## Prerequisites
+- MVI (Mortality, Violence and Injury)
+- CVLI (Crimes Violentos Letais Intencionais)
+- dimension modeling with location and metric metadata
+- fact table creation for metrics by location, year, and indicator
 
-- Python 3.10+ recommended
-- pip
+---
 
-Install the main dependencies:
+## Repository structure
+
+- `Star_pipeline/etl_pipeline.py` — active ETL pipeline implementation
+- `Entities/` — metric entity definitions and contracts
+  - `IMetricEntity.py` — abstract interface
+  - `MetricEntity.py` — shared base entity logic
+  - `MVI.py` — MVI-specific schema and extraction rules
+  - `CVLI.py` — CVLI-specific schema and extraction rules
+  - `__init__.py` — package exports
+- `data/` — source and generated datasets
+  - `1_bronze/` — raw CSV files
+  - `2_silver/` — cleaned parquet and CSV outputs
+  - `3_gold/` — star schema output tables
+- `tests/` — pytest coverage for the ETL logic
+- `Pipeline_test.ipynb` — notebook used to validate the pipeline with MVI and CVLI
+- `query_analytics.py` — analytics helpers and SQL-style queries
+- `visualize_results.py` — plotting and visualization utilities
+- `requirements.txt` — dependency list
+
+---
+
+## Supported data sources
+
+The bronze layer contains files such as:
+
+- `T01-MVI-anuario-2026.csv`
+- `T06-CVLI-anuario-2026.csv`
+
+The ETL pipeline expects the file names to be present under:
+
+- `data/1_bronze/`
+
+---
+
+## Pipeline flow
+
+The project follows the medallion pattern:
+
+1. Bronze layer
+   - reads raw CSV files
+   - extracts data blocks relevant to the metric
+   - removes non-data header/footer noise
+
+2. Silver layer
+   - cleans location names and numeric values
+   - normalizes missing values and number formatting
+   - writes a wide-format cleaned table
+
+3. Gold layer
+   - creates `dim_location`
+   - creates `dim_metric`
+   - creates `fct_mvi`/metric-specific fact table
+
+---
+
+## Current ETL usage
+
+### Run the pipeline from Python
+
+```python
+from Star_pipeline import etl_pipeline as etl
+from Entities import MVI, CVLI
+
+mvi_entity = MVI()
+pipeline_mvi = etl.ETLPipeline(mvi_entity)
+pipeline_mvi.run_pipeline("T01-MVI-anuario-2026.csv")
+
+cvli_entity = CVLI()
+pipeline_cvli = etl.ETLPipeline(cvli_entity)
+pipeline_cvli.run_pipeline("T06-CVLI-anuario-2026.csv")
+```
+
+### Run the notebook
+
+Open and execute:
+
+- [Pipeline_test.ipynb](Pipeline_test.ipynb)
+
+---
+
+## Project requirements
+
+Install dependencies with:
+
+```bash
+pip install -r requirements.txt
+```
+
+Or manually:
 
 ```bash
 pip install pandas numpy pyarrow fastparquet duckdb matplotlib seaborn pytest
 ```
 
-## Usage
+---
 
-Run the ETL pipeline (script):
+## Virtual environment setup
 
-```bash
-python etl_pipeline.py
-```
+Recommended for reproducible runs:
 
-Or open and run the notebook:
-
-- [CSV_File_Treatment.ipynb](CSV_File_Treatment.ipynb)
-
-After running, gold parquet files will be available in `data/3_gold/` and a cleaned silver file in `data/2_silver/`.
-
-## Visualizations & Analysis
-
-Use `visualize_results.py` or the plotting cells in the notebook to generate figures. The notebook includes DuckDB SQL queries against `data/3_gold/*.parquet` and plotting code with Matplotlib/Seaborn.
-
-## Tests
-
-Run the test suite with:
-
-```bash
-pytest -q
-```
-
-## Notes
-
-- The notebook contains a small workaround for pyarrow extension collisions when re-running cells.
-
-## Virtual Environment
-
-It's recommended to use a virtual environment for reproducible installs. Example commands:
-
-- Create a virtual environment:
 ```bash
 python -m venv .venv
 ```
 
-- Activate the environment:
-	- Windows (PowerShell):
-	```powershell
-	.venv\Scripts\Activate.ps1
-	```
-	- Windows (cmd):
-	```cmd
-	.venv\Scripts\activate.bat
-	```
-	- macOS / Linux:
-	```bash
-	source .venv/bin/activate
-	```
+Windows PowerShell:
 
-- Install dependencies:
-```bash
-pip install -r requirements.txt
+```powershell
+.venv\Scripts\Activate.ps1
 ```
 
-- Run the ETL script or notebook:
+Linux/macOS:
+
 ```bash
-python etl_pipeline.py
-# or
-jupyter lab
+source .venv/bin/activate
 ```
 
-- Run tests:
+Then install dependencies and run the notebook or ETL code.
+
+---
+
+## Testing
+
+Run the project tests with:
+
 ```bash
 pytest -q
 ```
 
-- Deactivate when finished:
-```bash
-deactivate
-```
+The current test suite validates the ETL behavior using the active module structure and the parquet-based gold outputs.
+
+---
+
+## Notes
+
+- This project intentionally uses the active ETL implementation in `Star_pipeline/etl_pipeline.py`.
+- The legacy `etl_pipeline2.py` is not the current production path and should be ignored for active project work.
+- The pipeline includes a known pyarrow/pandas compatibility workaround for repeated notebook execution in the ETL class.
 
